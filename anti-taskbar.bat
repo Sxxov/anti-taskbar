@@ -204,8 +204,6 @@ set /a "i=0"
     echo.
     echo.
     echo *   ? ^(/ help^)             Print the help docs.
-    echo.
-    echo.
     %return%
 )
 
