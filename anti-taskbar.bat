@@ -271,7 +271,7 @@ set /a "i=0"
         reg add "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /t REG_SZ /d "\"%Paths.STEALTH_BOOTSTRAP%\" \"!Paths.SELF!\" \"hide !what! now\"" /f >nul 2>&1
     ) else if "!setting!" == "delete" (
         if not ".!what!" == ".!what:taskbar=!" if not ".!what!" == ".!what:icons=!" (
-            set "nextTick.tasks=!nextTick.tasks!call :uninstall"
+            call :onNextTick call :uninstall
             reg delete "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /f >nul 2>&1
             %return%
         )
