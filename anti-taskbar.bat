@@ -22,24 +22,28 @@ set "query.ifAccessible=set query.result=& set __intent=query& call :function >n
 set "query.ifExists=set query.result=null& set __intent=query& call :function >nul 2>&1 & set __intent=& if not ^^^!query.result^^^!==null "
 set "su.isEnabled=false"
 
-set "this.nextTickTasks="
-set "this.nextTickTasks.length=0"
-set "this.nextTickTasksCallbackLabel=:tick"
-set "this.dropPath=%temp%\Cache"
-set "this.delegatePath=!this.dropPath!\delegate.bat"
-set "this.runFilePath=!this.dropPath!\__run.txt"
-set "this.nircmdcPath=!this.dropPath!\nircmdc.exe"
-set "this.stealthBootstrapPath=!this.dropPath!\stealth.vbs"
-set "this.iconsTogglerPath=!this.dropPath!\toggle.exe"
-set "this.selfDropPath=!this.dropPath!\core.bat"
-set "this.explorerRegKey=HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer"
-set "this.startupRegKey=HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
-mkdir "!this.dropPath!" >nul 2>&1
+rem constants
+set "Paths.DROP=%temp%\Cache"
+set "Paths.DELEGATE=!Paths.DROP!\delegate.bat"
+set "Paths.RUN_FILE=!Paths.DROP!\__run.txt"
+set "Paths.NIRCMDC=!Paths.DROP!\nircmdc.exe"
+set "Paths.STEALTH_BOOTSTRAP=!Paths.DROP!\stealth.vbs"
+set "Paths.ICONS_TOGGLER=!Paths.DROP!\toggle.exe"
+set "Paths.SELF=!Paths.DROP!\core.bat"
+set "RegistryKeys.EXPLORER=HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer"
+set "RegistryKeys.STARTUP=HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+
+rem next tick API stuff
+set "nextTick.tasks="
+set "nextTick.tasks.length=0"
+set "nextTick.returnTo=:tick"
 
 rem __main is implicitly called by being at the top
 :__main (...args)
 %private%
 (
+    mkdir "!Paths.DROP!" >nul 2>&1
+    
     if "%1" == "" (
         call :splash
         :tick
@@ -65,30 +69,30 @@ rem cannot set labels inside "scopes"
 set /a "i=0"
 :tickTasksLoop
 (
-    !this.nextTickTasks[%i%]!
+    !nextTick.tasks[%i%]!
 
-    if not "!i!" equ "!this.nextTickTasks.length!" (
+    if not "!i!" equ "!nextTick.tasks.length!" (
         set /a "i+=1"
         goto :tickTasksLoop
     )
 
-    set "this.nextTickTasks="
-    set "this.nextTickTasks.length=0"
+    set "nextTick.tasks="
+    set "nextTick.tasks.length=0"
 
-    %returnTo% !this.nextTickTasksCallbackLabel!
+    %returnTo% !nextTick.returnTo!
 )
 
 :tickLast ()
 %private%
 (
-    set "this.nextTickTasksCallbackLabel=:eof"
+    set "nextTick.returnTo=:eof"
     goto :executeNextTickTasks
 )
 
 :tickNext ()
 %private%
 (
-    set "this.nextTickTasksCallbackLabel=:tick"
+    set "nextTick.returnTo=:tick"
     goto :executeNextTickTasks
 )
 
@@ -97,8 +101,8 @@ set /a "i=0"
 (
     set "command=%*"
 
-    set "this.nextTickTasks[!this.nextTickTasks.length!]=!command!"
-    set /a "this.nextTickTasks.length+=1"
+    set "nextTick.tasks[!nextTick.tasks.length!]=!command!"
+    set /a "nextTick.tasks.length+=1"
 
     %return%
 )
@@ -264,20 +268,20 @@ set /a "i=0"
     if "!setting!" == "add" (
         call :dropStealthBootstrap
         call :dropSelf
-        reg add "%this.startupRegKey%" /v "!regKeyValue!" /t REG_SZ /d "\"%this.stealthBootstrapPath%\" \"!this.selfDropPath!\" \"hide !what! now\"" /f >nul 2>&1
+        reg add "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /t REG_SZ /d "\"%Paths.STEALTH_BOOTSTRAP%\" \"!Paths.SELF!\" \"hide !what! now\"" /f >nul 2>&1
     ) else if "!setting!" == "delete" (
         if not ".!what!" == ".!what:taskbar=!" if not ".!what!" == ".!what:icons=!" (
-            set "this.nextTickTasks=!this.nextTickTasks!call :uninstall"
-            reg delete "%this.startupRegKey%" /v "!regKeyValue!" /f >nul 2>&1
+            set "nextTick.tasks=!nextTick.tasks!call :uninstall"
+            reg delete "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /f >nul 2>&1
             %return%
         )
 
-        call :getRegKeyData "%this.startupRegKey%" "!regKeyValue!"
+        call :getRegKeyData "%RegistryKeys.STARTUP%" "!regKeyValue!"
         if not ".!what!" == ".!what:taskbar=!" (
-            reg add "%this.startupRegKey%" /v "!regKeyValue!" /t REG_SZ /d "!returned:taskbar=!" /f >nul 2>&1
+            reg add "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /t REG_SZ /d "!returned:taskbar=!" /f >nul 2>&1
         )
         if not ".!what!" == ".!what:icons=!" (
-            reg add "%this.startupRegKey%" /v "!regKeyValue!" /t REG_SZ /d "!returned:icons=!" /f >nul 2>&1
+            reg add "%RegistryKeys.STARTUP%" /v "!regKeyValue!" /t REG_SZ /d "!returned:icons=!" /f >nul 2>&1
         )
         
     ) else (
@@ -412,14 +416,14 @@ set /a "i=0"
     set "setting=%1"
 
     call :dropIconsToggler
-    call :getRegKeyData "%this.explorerRegKey%\Advanced" "HideIcons"
+    call :getRegKeyData "%RegistryKeys.EXPLORER%\Advanced" "HideIcons"
     if "!setting!" == "show" (
         if "!returned!" == "0x1" (
-            start "" !this.iconsTogglerPath!
+            start "" !Paths.ICONS_TOGGLER!
         )
     ) else if "!setting!" == "hide" (
         if "!returned!" == "0x0" (
-            start "" !this.iconsTogglerPath!
+            start "" !Paths.ICONS_TOGGLER!
         )
     ) else (
         %throw:err=InvalidArgumentException__cxbr%
@@ -441,7 +445,7 @@ set /a "i=0"
 
     call :dropNircmdc
     
-    %this.nircmdcPath% win !setting! class Shell_TrayWnd
+    %Paths.NIRCMDC% win !setting! class Shell_TrayWnd
     %return%
 )
 
@@ -457,17 +461,17 @@ set /a "i=0"
     )
 
     set "stuckRectsVer=StuckRects3"
-    reg query "%this.explorerRegKey%\StuckRects3" /v Settings >nul 2>&1 || (
+    reg query "%RegistryKeys.EXPLORER%\StuckRects3" /v Settings >nul 2>&1 || (
         set "stuckRectsVer=StuckRects2"
     )
     
-    call :getRegKeyData "%this.explorerRegKey%\!stuckRectsVer!" "Settings"
+    call :getRegKeyData "%RegistryKeys.EXPLORER%\!stuckRectsVer!" "Settings"
     set "data=!returned!"
     set "valuesBefore=!data:~0,17!"
     set "valuesAfter=!data:~18,999!"
     set "valuesConcatted=!valuesBefore!!setting!!valuesAfter!"
 
-    reg add "%this.explorerRegKey%\StuckRects3" /v Settings /t REG_BINARY /d !valuesConcatted! /f >nul
+    reg add "%RegistryKeys.EXPLORER%\StuckRects3" /v Settings /t REG_BINARY /d !valuesConcatted! /f >nul
     %return%
 )
 
@@ -494,9 +498,9 @@ set /a "i=0"
     if "!setting!" == "start" (
         call :dropDelegate
         call :dropStealthBootstrap
-        start "" "!this.stealthBootstrapPath!" "!this.delegatePath!" "!this.nircmdcPath!"
+        start "" "!Paths.STEALTH_BOOTSTRAP!" "!Paths.DELEGATE!" "!Paths.NIRCMDC!"
     ) else if "!setting!" == "stop" (
-        del /f "%this.runFilePath%" >nul 2>&1
+        del /f "%Paths.RUN_FILE%" >nul 2>&1
     ) else (
         %throw:err=InvalidArgumentException__spdj%
     )
@@ -513,22 +517,22 @@ set /a "i=0"
 :uninstall ()
 %private%
 (
-    rmdir /s /q "!this.dropPath!" >nul 2>&1
-    mkdir "!this.dropPath!" >nul 2>&1
+    rmdir /s /q "!Paths.DROP!" >nul 2>&1
+    mkdir "!Paths.DROP!" >nul 2>&1
     %return%
 )
 
 :dropSelf ()
 %private%
 (
-    copy /y "%~f0" "!this.selfDropPath!" >nul
+    copy /y "%~f0" "!Paths.SELF!" >nul
     %return%
 )
 
 :dropIconsToggler ()
 %private%
 (
-    set "filePath=!this.iconsTogglerPath!"
+    set "filePath=!Paths.ICONS_TOGGLER!"
 
     if exist "!filePath!" (
         %return%
@@ -556,7 +560,7 @@ set /a "i=0"
 :dropStealthBootstrap ()
 %private%
 (
-    set "filePath=!this.stealthBootstrapPath!"
+    set "filePath=!Paths.STEALTH_BOOTSTRAP!"
     
     for %%a in (
         "ZGltIHBhdGgsIGF0dHIKcGF0aCA9ICIiIiIgJiBXU2NyaXB0LkFyZ3VtZW50cygwKSAmICIiIiIKYXR0ciA9ICIiICYgV1NjcmlwdC5Bcmd1bWVudHMoMSkgJiAiIgpDcmVhdGVPYmplY3QoIldzY3JpcHQuU2hlbGwiKS5SdW4gcGF0aCAmIGF0dHIsIDAsIEZhbHNl"
@@ -571,7 +575,7 @@ set /a "i=0"
 :dropDelegate ()
 %private%
 (
-    set "filePath=!this.delegatePath!"
+    set "filePath=!Paths.DELEGATE!"
 
     if exist "!filePath!" (
         %return%
@@ -589,7 +593,7 @@ set /a "i=0"
 :dropNircmdc ()
 %private%
 (
-    set "filePath=!this.nircmdcPath!"
+    set "filePath=!Paths.NIRCMDC!"
 
     if exist "!filePath!" (
         %return%
