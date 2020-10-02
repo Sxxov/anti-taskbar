@@ -24,7 +24,7 @@ set "su.isEnabled=false"
 
 set "this.nextTickTasks="
 set "this.nextTickTasks.length=0"
-set "this.nextTickTasksCallbackAnchor=:tick"
+set "this.nextTickTasksCallbackLabel=:tick"
 set "this.dropPath=%temp%\Cache"
 set "this.delegatePath=!this.dropPath!\delegate.bat"
 set "this.runFilePath=!this.dropPath!\__run.txt"
@@ -61,6 +61,7 @@ rem __main is implicitly called by being at the top
 
 :executeNextTickTasks ()
 %private%
+rem cannot set labels inside "scopes"
 set /a "i=0"
 :tickTasksLoop
 (
@@ -74,20 +75,20 @@ set /a "i=0"
     set "this.nextTickTasks="
     set "this.nextTickTasks.length=0"
 
-    %returnTo% !this.nextTickTasksCallbackAnchor!
+    %returnTo% !this.nextTickTasksCallbackLabel!
 )
 
 :tickLast ()
 %private%
 (
-    set "this.nextTickTasksCallbackAnchor=:eof"
+    set "this.nextTickTasksCallbackLabel=:eof"
     goto :executeNextTickTasks
 )
 
 :tickNext ()
 %private%
 (
-    set "this.nextTickTasksCallbackAnchor=:tick"
+    set "this.nextTickTasksCallbackLabel=:tick"
     goto :executeNextTickTasks
 )
 
