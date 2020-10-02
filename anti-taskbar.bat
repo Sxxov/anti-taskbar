@@ -2,6 +2,7 @@
 setlocal EnableDelayedExpansion
 set "version=1.0"
 
+rem ""language features""
 set "return=set returned=val&& goto :eof"
 set "returnTo=set returned=val&& goto "
 set "returned="
@@ -9,17 +10,20 @@ set "throw=set __thrown=err&& if ^"^^^!__isTryBlock^^^!^" == ^"true^" ^(goto :eo
 set "throwing=set __thrown=err"
 set "try=set __thrown=null&&set __isTryBlock=true&&if a==a "
 set "catch=&&set __isTryBlock=false&&if not ^".^^^!__thrown^^^!^" == ^".^^^!__thrown:err=^^^!^""
-set "secho=echo Success: code,"
-set "eecho=echo Error: code,"
-set "public=if ^^^!__access^^^!==query set __access=granted&& (goto :eof)"
-set "private=if ^^^!__access^^^!==query set __access=denied&& (goto :eof)"
-set "query=set __access=query&&call :$ >nul 2>&1&if ^^^!__access^^^!==granted"
-set "sudoQuery=set __access=query&&call :$ >nul 2>&1&if not ^^^!__access^^^!==query"
+set "public=if ^^^!__intent^^^! == query set query.result=granted&& (goto :eof)"
+set "private=if ^^^!__intent^^^! == query if ^^^!su.isEnabled^^^! == true (set query.result=granted) else (set query.result=denied)&& (goto :eof)"
+
+rem APIs
+set "echo.log=set __echoPrefix=Log: code,& set __rawC=code& set __cSubstr=^^^!__rawC:cod=^^^!&& (if .^^^!__cSubstr^^^! == .e set __echoPrefix=Log:) && echo ^^^!__echoPrefix^^^!"
+set "echo.error=set __echoPrefix=Error: code,& set __rawC=code& set __cSubstr=^^^!__rawC:cod=^^^!&& (if .^^^!__cSubstr^^^! == .e set __echoPrefix=Error:) && echo ^^^!__echoPrefix^^^!"
+set "query.result="
+set "query.ifAccessible=set query.result=& set __intent=query& call :function >nul 2>&1 & set __intent=& if ^^^!query.result^^^!==granted "
+set "query.ifExists=set query.result=null& set __intent=query& call :function >nul 2>&1 & set __intent=& if not ^^^!query.result^^^!==null "
+set "su.isEnabled=false"
 
 set "this.nextTickTasks="
 set "this.nextTickTasks.length=0"
 set "this.nextTickTasksCallbackAnchor=:tick"
-set "this.devMode=false"
 set "this.dropPath=%temp%\Cache"
 set "this.delegatePath=!this.dropPath!\delegate.bat"
 set "this.runFilePath=!this.dropPath!\__run.txt"
@@ -60,9 +64,11 @@ set /a "i=0"
 :tickTasksLoop
 (
     !this.nextTickTasks[%i%]!
-    set /a "i+=1"
 
-    if not "!i!" equ "!this.nextTickTasks.length!" goto :tickTasksLoop
+    if not "!i!" equ "!this.nextTickTasks.length!" (
+        set /a "i+=1"
+        goto :tickTasksLoop
+    )
 
     set "this.nextTickTasks="
     set "this.nextTickTasks.length=0"
@@ -136,7 +142,7 @@ set /a "i=0"
         %return%
     )
 
-    %secho:code=Ping% pong 
+    %echo.log:code=Ping% pong 
     %return:val=pong%
 )
 
@@ -152,32 +158,23 @@ set /a "i=0"
     set "processedCmd=!subroutineArg! %2 %3 %4 %5 %6 %7 %8 %9"
     
     %try% (
-        if "!this.devMode!" == "false" (
-            rem verify if subroutine is private
-            %query:$=!subroutineArg!% (
-                call :!processedCmd!
-            ) else (
-                %throwing:err=InvalidArgumentException_kjba%
-            ) 
+        rem verify if subroutine is private
+        %query.ifAccessible:function=!subroutineArg!% (
+            call :!processedCmd!
         ) else (
-            rem just make sure the subroutine exists
-            %sudoQuery:$=!subroutineArg!% (
-                call :!processedCmd!
-            ) else (
-                %throwing:err=InvalidArgumentException_iucb%
-            )
-        )
+            %throwing:err=InvalidArgumentException_kjba%
+        ) 
+
         rem don't know why this is needed, !__thrown! doesn't seem to be updated without it
         echo !__thrown! >nul
-
     ) %catch:err=InvalidArgumentException% (
-        %eecho:code=WrongCommandException% ^(from !__thrown!^) try doing "?" to learn more about the commands
+        %echo.error:code=Wrong Command% ^(from !__thrown!^) try doing "?" to learn more about the commands
         %return%
     ) else break %catch:err=EmptyArgumentException% (
-        %eecho:code=IncompleteCommandException% ^(from !__thrown!^) try doing "?" to learn more about the commands
+        %echo.error:code=Incomplete Command% ^(from !__thrown!^) try doing "?" to learn more about the commands
         %return%
     )
-    %secho:code=CommandSuccess% no further action required
+    %echo.log:code=Command Success% no further action required
     %return:val=0%
 )
 
@@ -227,20 +224,20 @@ set /a "i=0"
     %return%
 )
 
-:devmode (setting)
+:su (setting)
 %public%
 (
     if "%1" == "true" (
-        %secho:code=DevModeEnabled%
-        set "this.devMode=true"
+        %echo.log:code=SuperUserEnabled%
+        set "su.isEnabled=true"
     ) else if "%1" == "false" (
-        %secho:code=DevModeDisabled%
-        set "this.devMode=false"
+        %echo.log:code=SuperUserDisabled%
+        set "su.isEnabled=false"
     ) else if "%1" == "" (
-        if "!this.devMode!" == "true" (
-            call :devmode false
+        if "!su.isEnabled!" == "true" (
+            call :su false
         ) else (
-            call :devmode true
+            call :su true
         )
     ) else (
         %throw:err=InvalidArgumentException__cxuv%
@@ -668,8 +665,8 @@ set /a "i=0"
     for /F "tokens=1 delims=: usebackq" %%l in (`findstr /N "!id!" "%~f0"`) do (
         set /a "lineNumber=%%l"
     )
-    %eecho:code=UncaughtException% ^(!id! at line !lineNumber!^)
-    %eecho:code=UncaughtException% Press any key to terminate...
+    %echo.error:code=UncaughtException% ^(!id! at line !lineNumber!^)
+    %echo.error:code=UncaughtException% Press any key to terminate...
     pause >nul
     call :exit 1
 )
