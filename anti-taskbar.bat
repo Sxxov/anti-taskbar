@@ -215,6 +215,12 @@ set /a "i=0"
 
     if "!code!" == "" (
         set "code=0"
+
+        %echo.log:code=Exit% Goodbye^^^!
+    )
+
+    if not "!code!" == "0" (
+        %echo.warn:code=Exit% Non-zero error code^^^! ^(!code!^)
     )
 
     call :onNextTick exit /b !code!
