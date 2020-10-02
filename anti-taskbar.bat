@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 set "version=1.0"
 
-rem ""language features""
+rem util: ""language features""
 set "return=set returned=val&& goto :eof"
 set "returnTo=set returned=val&& goto "
 set "returned="
@@ -13,7 +13,7 @@ set "catch=&&set __isTryBlock=false&&if not ^".^^^!__thrown^^^!^" == ^".^^^!__th
 set "public=if ^^^!__intent^^^! == query set query.result=granted&& (goto :eof)"
 set "private=if ^^^!__intent^^^! == query if ^^^!su.isEnabled^^^! == true (set query.result=granted) else (set query.result=denied)&& (goto :eof)"
 
-rem APIs
+rem util: APIs
 set "echo.log=set __echoPrefix=Log: code,& set __rawC=code& set __cSubstr=^^^!__rawC:cod=^^^!&& (if .^^^!__cSubstr^^^! == .e set __echoPrefix=Log:) && echo ^^^!__echoPrefix^^^!"
 set "echo.warn=!echo.log:Log=Warn!"
 set "echo.error=!echo.log:Log=Error!"
