@@ -174,7 +174,6 @@ set /a "i=0"
         %echo.error:code=Incomplete Command% ^(from !__thrown!^) try doing "?" to learn more about the commands
         %return%
     )
-    %echo.log:code=Command Success% no further action required
     %return:val=0%
 )
 
