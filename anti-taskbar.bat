@@ -15,7 +15,8 @@ set "private=if ^^^!__intent^^^! == query if ^^^!su.isEnabled^^^! == true (set q
 
 rem APIs
 set "echo.log=set __echoPrefix=Log: code,& set __rawC=code& set __cSubstr=^^^!__rawC:cod=^^^!&& (if .^^^!__cSubstr^^^! == .e set __echoPrefix=Log:) && echo ^^^!__echoPrefix^^^!"
-set "echo.error=set __echoPrefix=Error: code,& set __rawC=code& set __cSubstr=^^^!__rawC:cod=^^^!&& (if .^^^!__cSubstr^^^! == .e set __echoPrefix=Error:) && echo ^^^!__echoPrefix^^^!"
+set "echo.warn=!echo.log:Log=Warn!"
+set "echo.error=!echo.log:Log=Error!"
 set "query.result="
 set "query.ifAccessible=set query.result=& set __intent=query& call :function >nul 2>&1 & set __intent=& if ^^^!query.result^^^!==granted "
 set "query.ifExists=set query.result=null& set __intent=query& call :function >nul 2>&1 & set __intent=& if not ^^^!query.result^^^!==null "
