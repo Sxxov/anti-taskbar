@@ -59,8 +59,8 @@ set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[argu
 set "noop=rem"
 
 :: ----------- return -----------
-set "[[return.value]]="
-set "return=set [[return.value]]=$"
+set "[[returned]].value="
+set "return=set [[returned]].value=$"
 
 call :su aa bb cc dd
 exit /b
