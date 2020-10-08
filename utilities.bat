@@ -24,11 +24,11 @@ set "su.isEnabled=false"
 :: ----------- $ -----------
 :: @type	keyword
 :: @example	`%$%func param1 param2`
-set "^!=call :"
+set "$=call :"
 
 :: ----------- function -----------
 :: @type	keyword
-:: @param	", " delimited array string of function parameters
+:: @param	<ArrayString>, function parameters
 :: @example	`
 ::				:func
 :: 				%function:$=param1, param2%
@@ -38,45 +38,76 @@ set "^!=call :"
 ::			`
 :: @source
 REM set /a [[i]]=0
-REM set [[arguments]].keys=$
-REM for %%a in ("%[[arguments]].keys:, =" "%") do (
+REM set [[arguments]].keysString=$
+REM for %%a in ("%[[arguments]].keysString:, =" "%") do (
 REM 	rem echo ![[i]]!, %%~a, %![[i]]!%
 REM 	set [[arguments]].keys[![[i]]!]=%%~a
 REM 	set /a [[i]]+=1
 REM )
 REM set /a [[arguments]].keys.length=![[i]]! + 1
 REM set /a [[i]]=0
-REM call set [[arguments]].values=%%*
-REM for %%a in (![[arguments]].values!) do (
+REM call set [[arguments]].valuesString=%%*
+REM for %%a in (![[arguments]].valuesString!) do (
 REM 	for %%b in (![[i]]!) do (
 REM 		rem echo ![[arguments]].keys[%%b]!
+REM			set [[arguments]].values[%%b]=%%~a 2>nul
 REM 		set ![[arguments]].keys[%%b]!=%%~a 2>nul
 REM 	)
 REM 	set /a [[i]]+=1
 REM )
 REM set /a [[arguments]].values.length=![[i]]! + 1
 REM set [[i]]=
-set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[arguments]].keys:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[arguments]].keys.length=^^^![[i]]^^^! + 1&&set /a [[i]]=0&&call set [[arguments]].values=%%*&&(for %%a in (^^^![[arguments]].values^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].values.length=^^^![[i]]^^^! + 1&&set [[i]]="
+set "[[i]]="
+set "[[arguments]].keyString="
+set "[[arguments]].keys="
+set "[[arguments]].keys.length="
+set "[[arguments]].valuesString="
+set "[[arguments]].values="
+set "[[arguments]].values.length="
+set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^![[arguments]].keysString:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[arguments]].keys.length=^^^![[i]]^^^! + 1&&set /a [[i]]=0&&call set [[arguments]].valuesString=%%*&&(for %%a in (^^^![[arguments]].valuesString^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set [[arguments]].values[%%b]=%%~a 2>nul&&set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].values.length=^^^![[i]]^^^! + 1&&set [[i]]="
 
 :: ----------- noop -----------
 set "noop=rem"
 
 :: ----------- return -----------
-set "[[returned]].value="
-set "return=set [[returned]].value=$"
+:: @type	keyword
+:: @param	<any>, value to return
+:: @example	`
+::				:func
+:: 				%function:$=param1, param2%
+::				(
+::					if "!param1!" == false %return:$=1%
+::
+::					rem ...
+::					%return:$=0%
+::				)
+::			`
+:: @source
+REM set [[returned]].value=$
+REM set [[cachedExitcode]]=!=exitcode!
+REM cmd /c exit 36 || (
+REM 	if "$" == "^^^!=exitcodeAscii^^^!" (
+REM 		set [[returned]].value=0
+REM 	)
+REM 	cmd /c exit ![[cachedExitcode]]!
+REM 	for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (
+REM 		set ![[arguments]].keys[%%i]!=2>nul
+REM 	)
+REM )
+REM exit /b
+set "[[return]].value="
+set "returned="
+set "return=set [[return]].value=$&&set [[cachedExitcode]]=^^^!=exitcode^^^!&&cmd /c exit 36||(if "$" == "^^^!=exitcodeAscii^^^!" set [[return]].value=0&&set returned=^^^![[return]].value^^^!&&cmd /c exit ^^^![[cachedExitcode]]^^^!&((for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&exit /b))"
 
-call :su aa bb cc dd
+!$!su true
+echo !returned!
 exit /b
 
 :su
-%function:$=newState, a%
-echo !newState!
+%function:$=newState%
 (
-	
-	echo !newState! !a! %1 %2
-	rem set a return value
-	rem clear input variables
-	goto :eof
+	echo !newState!
+	%return%
 )
 
 :exception (id)
