@@ -27,12 +27,15 @@ set "DOLLAR_CHAR=$"
 
 :: ----------- $ -----------
 :: @type	keyword
-:: @example	`%$%func param1 param2`
+:: @example	`!$!::func param1 param2`
 set "$=call "
 
 :: ----------- > -----------
 :: @type	keyword
-:: @example	`%$%func param1 param2`
+:: @example	`
+::				!$!::func param1 param2 ^
+::					!>:$=returnedValue!
+::			`
 set "^>=& set "$=^^^!returned^^^!""
 
 :: ----------- function -----------
