@@ -1,5 +1,6 @@
-@echo on
-setlocal EnableDelayedExpansion
+REM setlocal EnableDelayedExpansion
+
+:core
 
 rem util: ""language features""
 set "return=set returned=val&& goto :eof"
@@ -24,7 +25,7 @@ set "su.isEnabled=false"
 :: ----------- $ -----------
 :: @type	keyword
 :: @example	`%$%func param1 param2`
-set "$=call :"
+set "$=call "
 
 :: ----------- function -----------
 :: @type	keyword
@@ -66,9 +67,6 @@ set "[[arguments]].values="
 set "[[arguments]].values.length="
 set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^![[arguments]].keysString:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[arguments]].keys.length=^^^![[i]]^^^! + 1&&set /a [[i]]=0&&call set [[arguments]].valuesString=%%*&&(for %%a in (^^^![[arguments]].valuesString^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set [[arguments]].values[%%b]=%%~a 2>nul&&set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].values.length=^^^![[i]]^^^! + 1&&set [[i]]="
 
-:: ----------- noop -----------
-set "noop=rem"
-
 :: ----------- return -----------
 :: @type	keyword
 :: @param	<any>, value to return
@@ -99,18 +97,38 @@ set "[[return]].value="
 set "returned="
 set "return=set [[return]].value=$&&set [[cachedExitcode]]=^^^!=exitcode^^^!&&cmd /c exit 36||(if "$" == "^^^!=exitcodeAscii^^^!" set [[return]].value=0&&set returned=^^^![[return]].value^^^!&&cmd /c exit ^^^![[cachedExitcode]]^^^!&((for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&exit /b))"
 
-!$!su true
-echo !returned!
-exit /b
+if not "%*" == "" (
+	call :%*
+)
+rem else, just load side effects
+goto :eof
 
+:: ----------- noop -----------
+:noop
+(
+	goto :eof
+)
+
+set "su.isEnabled=false"
 :su
 %function:$=newState%
 (
+	if "!newState!" == "" (
+		if "!su.isEnabled!" == "true" (
+			set newState=false
+		) else (
+			set newState=true
+		)
+	)
+
 	echo !newState!
+
+	set "su.isEnabled=!newState!"
+
 	%return%
 )
 
-:exception (id)
+:[[onUncaughtException]]
 %!%private
 (
     set "id=%1"
