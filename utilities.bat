@@ -27,11 +27,13 @@ set "DOLLAR_CHAR=$"
 
 :: ----------- $ -----------
 :: @type	keyword
+:: @param	<string>, functionKey
 :: @example	`!$!::func param1 param2`
 set "$=call "
 
 :: ----------- > -----------
 :: @type	keyword
+:: @$param	<string>, variableKey
 :: @example	`
 ::				!$!::func param1 param2 ^
 ::					!>:$=returnedValue!
@@ -40,7 +42,7 @@ set "^>=& set "$=^^^!returned^^^!""
 
 :: ----------- function -----------
 :: @type	keyword
-:: @param	<ArrayString>, function parameters
+:: @$param	<ArrayString>, function parameters
 :: @example	`
 ::				:func
 :: 				%function:$=param1, param2%
@@ -80,7 +82,7 @@ set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^!
 
 :: ----------- return -----------
 :: @type	keyword
-:: @param	<any>, value to return
+:: @$param	<any>, value to return
 :: @example	`
 ::				:func
 :: 				%function:$=param1, param2%
@@ -106,6 +108,8 @@ set "returned="
 set "return=set [[return]].value=$&(if "$" == "^^^!DOLLAR_CHAR^^^!" (set [[return]].value=))&set returned=^^^![[return]].value^^^!&(for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&goto :eof"
 
 :: ----------- core -----------
+:: @type	function<meta>
+:: @example	`call ::core`
 if not "%*" == "" (
 	call :%*
 )
@@ -113,12 +117,17 @@ rem else, just load side effects
 goto :eof
 
 :: ----------- noop -----------
+:: @type	function
+:: @example	`!$!::noop`
 :noop
 (
 	goto :eof
 )
 
 :: ----------- su -----------
+:: @type	function
+:: @param	<boolean>, newState
+:: @example	`!$!::su true`
 set "su.isEnabled="
 :su
 %function:$=newState%
@@ -137,6 +146,11 @@ set "su.isEnabled="
 )
 
 :: ----------- echo -----------
+:: @type	function
+:: @param	<string>, level
+:: @param	<string>, tag
+:: @param	<string>, message
+:: @example	`!$!::echo Log, Foo, BarMessage`
 :echo 
 %function:$=level, tag, message%
 (
@@ -151,29 +165,44 @@ set "su.isEnabled="
 
 	%return%
 )
+:: @type	function
+:: @param	<string>, tag
+:: @param	<string>, message
+:: @example	`!$!::echo.log Foo, BarMessage`
 :echo.log
 %function:$=tag, message%
 (
-	!$!::echo Log !tag! !message!
+	!$!::echo Log !tag!, !message!
 
 	%return%
 )
+:: @type	function
+:: @param	<string>, tag
+:: @param	<string>, message
+:: @example	`!$!::echo.warn Foo, BarMessage`
 :echo.warn
 %function:$=tag, message%
 (
-	!$!::echo Warn !tag! !message!
+	!$!::echo Warn !tag!, !message!
 
 	%return%
 )
+:: @type	function
+:: @param	<string>, tag
+:: @param	<string>, message
+:: @example	`!$!::echo.error Foo, BarMessage`
 :echo.error
 %function:$=tag, message%
 (
-	!$!::echo Error !tag! !message!
+	!$!::echo Error !tag!, !message!
 
 	%return%
 )
 
 :: ----------- performance -----------
+:: @type	function
+:: @return	<number>
+:: @example	`!$!::performance.now`
 :performance.now
 %function:$=%
 (
@@ -183,6 +212,14 @@ set "su.isEnabled="
 
 	%return:$=!now!%
 )
+:: @type	function
+:: @return	<number>
+:: @example	`
+::				!$!::performance.measure
+::				rem ...
+::				!$!::performance.measure ^
+::					!>:$=performanceMeasureResult!
+::			`
 set "performance.measure.lastTime="
 :performance.measure
 %function:$=%
@@ -206,15 +243,22 @@ set "performance.measure.lastTime="
 )
 
 :: ----------- time -----------
+:: @type	function
+:: @param	<number>, ms
+:: @return	<number>
+:: @example	`
+::				!$!::time.msToHuman !fooMilliseconds! ^
+::					!>:$=humanTime!
+::			`
 :time.msToHuman
 %function:$=ms%
 (
-	set /A "hh=ms/(60*60*100)"
-	set /A "rest=ms%%(60*60*100)"
-	set /A "mm=rest/(60*100)"
-	set /A "rest%%=60*100"
-	set /A "ss=rest/100"
-	set /A "cc=rest%%100"
+	set /a "hh=ms/(60*60*100)"
+	set /a "rest=ms%%(60*60*100)"
+	set /a "mm=rest/(60*100)"
+	set /a "rest%%=60*100"
+	set /a "ss=rest/100"
+	set /a "cc=rest%%100"
 
 	set hh=0!hh!
 	set mm=0!mm!
