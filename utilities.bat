@@ -22,6 +22,9 @@ set "query.ifAccessible=set query.result=& set __intent=query& call :function >n
 set "query.ifExists=set query.result=null& set __intent=query& call :function >nul 2>&1 & set __intent=& if not ^^^!query.result^^^!==null "
 set "su.isEnabled=false"
 
+:: ----------- GLOBALS -----------
+set "DOLLAR_CHAR=$"
+
 :: ----------- $ -----------
 :: @type	keyword
 :: @example	`%$%func param1 param2`
@@ -51,8 +54,8 @@ REM call set [[arguments]].valuesString=%%*
 REM for %%a in (![[arguments]].valuesString!) do (
 REM 	for %%b in (![[i]]!) do (
 REM 		rem echo ![[arguments]].keys[%%b]!
-REM			set [[arguments]].values[%%b]=%%~a 2>nul
-REM 		set ![[arguments]].keys[%%b]!=%%~a 2>nul
+REM			set "[[arguments]].values[%%b]=%%~a" 2>nul
+REM 		set "![[arguments]].keys[%%b]!=%%~a" 2>nul
 REM 	)
 REM 	set /a [[i]]+=1
 REM )
@@ -65,7 +68,7 @@ set "[[arguments]].keys.length="
 set "[[arguments]].valuesString="
 set "[[arguments]].values="
 set "[[arguments]].values.length="
-set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^![[arguments]].keysString:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[arguments]].keys.length=^^^![[i]]^^^! + 1&&set /a [[i]]=0&&call set [[arguments]].valuesString=%%*&&(for %%a in (^^^![[arguments]].valuesString^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set [[arguments]].values[%%b]=%%~a 2>nul&&set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].values.length=^^^![[i]]^^^! + 1&&set [[i]]="
+set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^![[arguments]].keysString:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[arguments]].keys.length=^^^![[i]]^^^! + 1&&set /a [[i]]=0&&call set [[arguments]].valuesString=%%*&&(for %%a in (^^^![[arguments]].valuesString^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set "[[arguments]].values[%%b]=%%~a" 2>nul&&set "^^^![[arguments]].keys[%%b]^^^!=%%~a"2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].values.length=^^^![[i]]^^^! + 1&&set [[i]]="
 
 :: ----------- return -----------
 :: @type	keyword
@@ -83,20 +86,18 @@ set "function=set /a [[i]]=0&&set [[arguments]].keysString=$&&(for %%a in ("^^^!
 :: @source
 REM set [[returned]].value=$
 REM set [[cachedExitcode]]=!=exitcode!
-REM cmd /c exit 36 || (
-REM 	if "$" == "^^^!=exitcodeAscii^^^!" (
-REM 		set [[returned]].value=0
-REM 	)
-REM 	cmd /c exit ![[cachedExitcode]]!
-REM 	for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (
-REM 		set ![[arguments]].keys[%%i]!=2>nul
-REM 	)
+REM if "$" == "!DOLLAR_CHAR!" (
+REM 	set [[returned]].value=0
+REM )
+REM for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (
+REM 	set ![[arguments]].keys[%%i]!=2>nul
 REM )
 REM exit /b
 set "[[return]].value="
 set "returned="
-set "return=set [[return]].value=$&&set [[cachedExitcode]]=^^^!=exitcode^^^!&&cmd /c exit 36||(if "$" == "^^^!=exitcodeAscii^^^!" set [[return]].value=0&&set returned=^^^![[return]].value^^^!&&cmd /c exit ^^^![[cachedExitcode]]^^^!&((for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&exit /b))"
+set "return=set [[return]].value=$&&if "$" == "^^^!DOLLAR_CHAR^^^!" set [[return]].value=&&set returned=^^^![[return]].value^^^!&((for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&exit /b)"
 
+:: ----------- core -----------
 if not "%*" == "" (
 	call :%*
 )
@@ -109,7 +110,8 @@ goto :eof
 	goto :eof
 )
 
-set "su.isEnabled=false"
+:: ----------- su -----------
+set "su.isEnabled="
 :su
 %function:$=newState%
 (
@@ -121,27 +123,56 @@ set "su.isEnabled=false"
 		)
 	)
 
-	echo !newState!
-
 	set "su.isEnabled=!newState!"
 
 	%return%
 )
 
-:[[onUncaughtException]]
-%!%private
+:: ----------- echo -----------
+:echo 
+%function:$=level, tag, message%
 (
-    set "id=%1"
-    for /F "tokens=1 delims=: usebackq" %%l in (`findstr /N "!id!" "%~f0"`) do (
-        set /a "lineNumber=%%l"
-    )
-    %echo.error:code=UncaughtException% ^(!id! at line !lineNumber!^)
-    %echo.error:code=UncaughtException% Press any key to terminate...
-    pause >nul
-    call :exit 1
+	set "tagDelimiter="
+
+	rem if no tag provided, tag becomes the message
+	if not "!message!" == "" (
+		set "tagDelimiter=, "
+	)
+
+	echo !level!: !tag!!tagDelimiter!!message!
+
+	%return%
+)
+:echo.log
+%function:$=tag, message%
+(
+	!$!::echo Log !tag! !message!
+
+	%return%
+)
+:echo.warn
+%function:$=tag, message%
+(
+	!$!::echo Warn !tag! !message!
+)
+:echo.error
+%function:$=tag, message%
+(
+	!$!::echo Error !tag! !message!
 )
 
-:__call
+:: ----------- [[onUncaughtException]] -----------
+:[[onUncaughtException]]
+%function:$=id%
 (
+    for /f "tokens=1 delims=: usebackq" %%l in (`findstr /N "!id!" "%~f0"`) do (
+        set /a "lineNumber=%%l"
+    )
 
+    !$!::echo.error UncaughtException ^(!id! at line !lineNumber!^)
+    !$!::echo.error UncaughtException Press any key to terminate...
+
+    pause >nul
+
+	!$!::exit 1
 )
