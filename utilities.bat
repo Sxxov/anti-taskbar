@@ -36,7 +36,7 @@ set "$=call "
 :: @$param	<string>, variableKey
 :: @example	`
 ::				!$!::func param1 param2 ^
-::					!>:$=returnedValue!
+::					%>:$=returnedValue%
 ::			`
 set "^>=& set "$=^^^!returned^^^!""
 
@@ -218,7 +218,7 @@ set "su.isEnabled="
 ::				!$!::performance.measure
 ::				rem ...
 ::				!$!::performance.measure ^
-::					!>:$=performanceMeasureResult!
+::					%>:$=performanceMeasureResult%
 ::			`
 set "performance.measure.lastTime="
 :performance.measure
@@ -226,7 +226,7 @@ set "performance.measure.lastTime="
 (
 	if "!performance.measure.lastTime!" == "" (
 		!$!::performance.now ^
-			!>:$=performanceNowResult!
+			%>:$=performanceNowResult%
 
 		set /a "performance.measure.lastTime=!performanceNowResult!"
 
@@ -234,7 +234,7 @@ set "performance.measure.lastTime="
 	)
 
 	!$!::performance.now ^
-		!>:$=performanceNowResult!
+		%>:$=performanceNowResult%
 
 	set /a "difference=!performanceNowResult! - !performance.measure.lastTime!"
 	set /a "performance.measure.lastTime=!performanceNowResult!"
@@ -248,7 +248,7 @@ set "performance.measure.lastTime="
 :: @return	<number>
 :: @example	`
 ::				!$!::time.msToHuman !fooMilliseconds! ^
-::					!>:$=humanTime!
+::					%>:$=humanTime%
 ::			`
 :time.msToHuman
 %function:$=ms%
@@ -264,8 +264,6 @@ set "performance.measure.lastTime="
 	set mm=0!mm!
 	set ss=0!ss!
 	set cc=0!cc!
-
-	echo !hh:~-2!:!mm:~-2!:!ss:~-2!:!cc:~-2!
 
 	set "humanTime=!hh:~-2!:!mm:~-2!:!ss:~-2!:!cc:~-2!"
 
