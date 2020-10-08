@@ -52,6 +52,7 @@ REM 		echo !params[%%b]!
 REM 		set !params[%%b]!=%%~a
 REM 	)
 REM 	set /a i+=1
+REM )
 set "function=set /a i=0&&set params=$&&(for %%a in ("^^^!params:, =" "^^^!") do (echo ^^^!i^^^!, %%~a, %%^^^!i^^^!%%&&set params[^^^!i^^^!]=%%~a&&set /a i+=1 ))&&set /a i=0&&call set paramValues=%%*&&(for %%a in (^^^!paramValues^^^!) do ((for %%b in (^^^!i^^^!) do (echo ^^^!params[%%b]^^^!&&set ^^^!params[%%b]^^^!=%%~a))&&set /a i+=1))"
 
 :: ----------- noop -----------
