@@ -40,7 +40,7 @@ set "^!=call :"
 REM set /a [[i]]=0
 REM set [[arguments]].keys=$
 REM for %%a in ("%[[arguments]].keys:, =" "%") do (
-REM 	echo ![[i]]!, %%~a, %![[i]]!%
+REM 	rem echo ![[i]]!, %%~a, %![[i]]!%
 REM 	set [[arguments]].keys[![[i]]!]=%%~a
 REM 	set /a [[i]]+=1
 REM )
@@ -48,12 +48,12 @@ REM set /a [[i]]=0
 REM call set [[arguments]].values=%%*
 REM for %%a in (![[arguments]].values!) do (
 REM 	for %%b in (![[i]]!) do (
-REM 		echo ![[arguments]].keys[%%b]!
+REM 		rem echo ![[arguments]].keys[%%b]!
 REM 		set ![[arguments]].keys[%%b]!=%%~a
 REM 	)
 REM 	set /a [[i]]+=1
 REM )
-set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[arguments]].keys:, =" "^^^!") do (echo ^^^![[i]]^^^!, %%~a, %%^^^![[i]]^^^!%%&&set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[i]]=0&&call set [[arguments]].values=%%*&&(for %%a in (^^^![[arguments]].values^^^!) do ((for %%b in (^^^![[i]]^^^!) do (echo ^^^![[arguments]].keys[%%b]^^^!&&set ^^^![[arguments]].keys[%%b]^^^!=%%~a))&&set /a [[i]]+=1))"
+set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[arguments]].keys:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[i]]=0&&call set [[arguments]].values=%%*&&(for %%a in (^^^![[arguments]].values^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set ^^^![[arguments]].keys[%%b]^^^!=%%~a))&&set /a [[i]]+=1))"
 
 :: ----------- noop -----------
 set "noop=rem"
