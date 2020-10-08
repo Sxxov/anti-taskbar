@@ -53,7 +53,9 @@ REM 		set ![[arguments]].keys[%%b]!=%%~a 2>nul
 REM 	)
 REM 	set /a [[i]]+=1
 REM )
-set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[arguments]].keys:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[i]]=0&&call set [[arguments]].values=%%*&&(for %%a in (^^^![[arguments]].values^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))"
+REM set /a [[arguments]].length=![[i]]! + 1
+REM set [[i]]=
+set "function=set /a [[i]]=0&&set [[arguments]].keys=$&&(for %%a in ("^^^![[arguments]].keys:, =" "^^^!") do (set [[arguments]].keys[^^^![[i]]^^^!]=%%~a&&set /a [[i]]+=1 ))&&set /a [[i]]=0&&call set [[arguments]].values=%%*&&(for %%a in (^^^![[arguments]].values^^^!) do ((for %%b in (^^^![[i]]^^^!) do (set ^^^![[arguments]].keys[%%b]^^^!=%%~a 2>nul))&&set /a [[i]]+=1))&&set /a [[arguments]].length=^^^![[i]]^^^! + 1&&set [[i]]="
 
 :: ----------- noop -----------
 set "noop=rem"
