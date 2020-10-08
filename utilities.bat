@@ -30,6 +30,11 @@ set "DOLLAR_CHAR=$"
 :: @example	`%$%func param1 param2`
 set "$=call "
 
+:: ----------- > -----------
+:: @type	keyword
+:: @example	`%$%func param1 param2`
+set "^>=& set "$=^^^!returned^^^!""
+
 :: ----------- function -----------
 :: @type	keyword
 :: @param	<ArrayString>, function parameters
@@ -95,7 +100,7 @@ REM )
 REM exit /b
 set "[[return]].value="
 set "returned="
-set "return=set [[return]].value=$&&if "$" == "^^^!DOLLAR_CHAR^^^!" set [[return]].value=&&set returned=^^^![[return]].value^^^!&((for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&exit /b)"
+set "return=set [[return]].value=$&(if "$" == "^^^!DOLLAR_CHAR^^^!" (set [[return]].value=))&set returned=^^^![[return]].value^^^!&(for /l %%i in (0, 1, ^^^![[arguments]].keys.length^^^!) do (set ^^^![[arguments]].keys[%%i]^^^!=2>nul))&goto :eof"
 
 :: ----------- core -----------
 if not "%*" == "" (
@@ -154,11 +159,70 @@ set "su.isEnabled="
 %function:$=tag, message%
 (
 	!$!::echo Warn !tag! !message!
+
+	%return%
 )
 :echo.error
 %function:$=tag, message%
 (
 	!$!::echo Error !tag! !message!
+
+	%return%
+)
+
+:: ----------- performance -----------
+:performance.now
+%function:$=%
+(
+	for /f "tokens=1-4 delims=:.," %%a in ("%time%") do (
+		set /a "now=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+	)
+
+	%return:$=!now!%
+)
+set "performance.measure.lastTime="
+:performance.measure
+%function:$=%
+(
+	if "!performance.measure.lastTime!" == "" (
+		!$!::performance.now
+
+		echo !returned!
+
+		set /a "performance.measure.lastTime=!returned!"
+
+		%return:$=0%
+	)
+
+	!$!::performance.now
+
+	set /a "difference=!returned! - !performance.measure.lastTime!"
+	set /a "performance.measure.lastTime=!returned!"
+
+	%return:$=!difference!%
+)
+
+:: ----------- time -----------
+:time.msToHuman
+%function:$=ms%
+(
+	set /A "hh=ms/(60*60*100)"
+	set /A "rest=ms%%(60*60*100)"
+	set /A "mm=rest/(60*100)"
+	set /A "rest%%=60*100"
+	set /A "ss=rest/100"
+	set /A "cc=rest%%100"
+
+	set hh=0!hh!
+	set mm=0!mm!
+	set ss=0!ss!
+	set cc=0!cc!
+
+	echo !hh:~-2!:!mm:~-2!:!ss:~-2!:!cc:~-2!
+
+	set "humanTime=!hh:~-2!:!mm:~-2!:!ss:~-2!:!cc:~-2!"
+
+	%return:$=!humanTime!%
 )
 
 :: ----------- [[onUncaughtException]] -----------
