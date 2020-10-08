@@ -185,19 +185,19 @@ set "performance.measure.lastTime="
 %function:$=%
 (
 	if "!performance.measure.lastTime!" == "" (
-		!$!::performance.now
+		!$!::performance.now ^
+			!>:$=performanceNowResult!
 
-		echo !returned!
-
-		set /a "performance.measure.lastTime=!returned!"
+		set /a "performance.measure.lastTime=!performanceNowResult!"
 
 		%return:$=0%
 	)
 
-	!$!::performance.now
+	!$!::performance.now ^
+		!>:$=performanceNowResult!
 
-	set /a "difference=!returned! - !performance.measure.lastTime!"
-	set /a "performance.measure.lastTime=!returned!"
+	set /a "difference=!performanceNowResult! - !performance.measure.lastTime!"
+	set /a "performance.measure.lastTime=!performanceNowResult!"
 
 	%return:$=!difference!%
 )
