@@ -135,7 +135,7 @@ set /a "i=0"
     echo ^|__^| ^|__^|^|_^|  ^|__^|  ^|___^|  ^|___^|          ^|___^|  ^|__^| ^|__^|^|_______^|^|___^| ^|_^|^|_______^|^|__^| ^|__^|^|___^|  ^|_^|    [%version%]
     echo.
                                                             
-    echo ^(c^) jiashe.ng 2020
+    echo ^(c^) ljs.lol 2021
     echo Type "?" to get started...
     echo.
     %return%
@@ -209,7 +209,7 @@ set /a "i=0"
     echo                                Options: ^<int^>
     echo.
     echo.
-    echo *   ? ^(/ help^)             Print the help docs.
+    echo *   ? ^(help^)             Print the help docs.
     %return%
 )
 
